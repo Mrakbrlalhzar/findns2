@@ -1,0 +1,31 @@
+name: Build findns for Android (ARMv7)
+
+on:
+  workflow_dispatch:  # اجازه اجرای دستی از تب Actions
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'  # مطابق go.mod پروژه
+
+      - name: Build for linux/arm (ARMv7)
+        run: |
+          cd cmd
+          GOOS=linux GOARCH=arm GOARM=7 go build -o findns-armv7 .
+          mkdir -p ${{ github.workspace }}/output
+          cp findns-armv7 ${{ github.workspace }}/output/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: findns-android-armv7
+          path: output/
