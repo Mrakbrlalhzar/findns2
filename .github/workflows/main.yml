@@ -1,11 +1,10 @@
-name: Build findns and Release
+name: Build findns for Termux (ARMv7 - Go 1.21+)
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [ master ]
 
-# 🔑 این بلاک را اضافه کنید
 permissions:
   contents: write
 
@@ -16,19 +15,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Set up Go (1.21 or later)
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.23'
 
       - name: Build for linux/arm (ARMv7)
+        env:
+          GOOS: linux
+          GOARCH: arm
+          GOARM: 7
+          CGO_ENABLED: 0
         run: |
-          cd cmd
-          GOOS=linux GOARCH=arm GOARM=7 go build -o findns-armv7 .
+          cd cmd/findns
+          go build -ldflags "-s -w" -o findns-armv7 .
           mkdir -p ${{ github.workspace }}/output
           cp findns-armv7 ${{ github.workspace }}/output/
 
-      - name: Create Release and Upload Asset
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
