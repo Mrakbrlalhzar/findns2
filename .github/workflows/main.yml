@@ -1,4 +1,4 @@
-name: Build findns for Termux (ARMv7 - Go 1.21+)
+name: Build findns for Termux with CGO (ARMv7)
 
 on:
   workflow_dispatch:
@@ -15,17 +15,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go (1.21 or later)
+      - name: Install ARM cross-compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
+
+      - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
 
-      - name: Build for linux/arm (ARMv7)
+      - name: Build with CGO for ARMv7
         env:
+          CGO_ENABLED: 1
           GOOS: linux
           GOARCH: arm
           GOARM: 7
-          CGO_ENABLED: 0
+          CC: arm-linux-gnueabihf-gcc
         run: |
           cd cmd
           go build -ldflags "-s -w" -o findns-armv7 .
