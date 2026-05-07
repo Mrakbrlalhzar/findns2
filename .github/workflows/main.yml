@@ -1,4 +1,4 @@
-name: Build findns for Termux with CGO (ARMv7)
+name: Build findns for Termux (ARMv7)
 
 on:
   workflow_dispatch:
@@ -15,22 +15,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install ARM cross-compiler
-        run: sudo apt-get update && sudo apt-get install -y gcc-arm-linux-gnueabihf
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
 
-      - name: Build with CGO for ARMv7
+      - name: Build for Android ARMv7 with CGO
         env:
           CGO_ENABLED: 1
-          GOOS: linux
+          GOOS: android
           GOARCH: arm
           GOARM: 7
-          CC: arm-linux-gnueabihf-gcc
+          CC: ${{ github.workspace }}/toolchain/bin/armv7a-linux-androideabi21-clang
         run: |
+    
+          wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          unzip -q android-ndk-r27c-linux.zip
+          
+          
+          android-ndk-r27c/build/tools/make-standalone-toolchain.sh \
+            --arch=arm \
+            --platform=android-21 \
+            --install-dir=${{ github.workspace }}/toolchain
+
+          
           cd cmd
           go build -ldflags "-s -w" -o findns-armv7 .
           mkdir -p ${{ github.workspace }}/output
