@@ -27,7 +27,7 @@ jobs:
           GOARM: 7
           CGO_ENABLED: 0
         run: |
-          cd cmd/findns
+          cd cmd
           go build -ldflags "-s -w" -o findns-armv7 .
           mkdir -p ${{ github.workspace }}/output
           cp findns-armv7 ${{ github.workspace }}/output/
