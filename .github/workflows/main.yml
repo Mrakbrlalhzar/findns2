@@ -18,27 +18,32 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.23'  # Use a recent Go version
+
+      # این اکشن به طور خودکار NDK را دانلود و مسیر آن را تنظیم می‌کند.
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d  # Use a version where the script is present
+          add-to-path: false
 
       - name: Build for Android ARMv7 with CGO
         env:
-          CGO_ENABLED: 1
           GOOS: android
           GOARCH: arm
           GOARM: 7
-          CC: ${{ github.workspace }}/toolchain/bin/armv7a-linux-androideabi21-clang
+          CGO_ENABLED: 1
+          ANDROID_API: 21
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
-    
-          wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          unzip -q android-ndk-r27c-linux.zip
+          # مسیر کامپایلر Clang را بر اساس NDK تنظیم می‌کنیم
+          TOOLCHAIN_BIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          export CC="$TOOLCHAIN_BIN/armv7a-linux-androideabi${ANDROID_API}-clang"
           
+          echo "Using compiler: $CC"
           
-          android-ndk-r27c/build/tools/make-standalone-toolchain.sh \
-            --arch=arm \
-            --platform=android-21 \
-            --install-dir=${{ github.workspace }}/toolchain
-
-          
+          # کامپایل پروژه
           cd cmd
           go build -ldflags "-s -w" -o findns-armv7 .
           mkdir -p ${{ github.workspace }}/output
